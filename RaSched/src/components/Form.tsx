@@ -130,11 +130,10 @@ const Form = () => {
 
 
     return (
-        // <div className=' rounded-lg w-5/6 bg-slate-100 mx-auto'>
-        <form className='py-9 px-4 mx-auto' onSubmit={handleSubmit}>
+        <form className='flex flex-col items-center mt-20' onSubmit={handleSubmit}>
             <input className='hover:shadow-md shadow-lg py-2 px-3 mb-10 rounded-lg' type="text" value={userName} onChange={handleNameChange} placeholder='Name' required />
             <h3 className='font-lg text-red-800 font-bold mb-4'>Please indicate your UNavailability in intervals</h3>
-            <div className='flex justify-center flex-row gap-4'>
+            <div className='flex justify-center text-center flex-row gap-4'>
                 {Object.keys(intervals).map((day) =>
                     <div className='w-48 flex-shrink-0 rounded-lg bg-slate-100 px-2 py-2' key={day}>
                         <h3 className='font-lg text-red-800 font-bold'>{day}</h3>
@@ -155,8 +154,6 @@ const Form = () => {
             </div>
             <button className='px-4 py-2 hover:bg-green-500 bg-green-600 text-white rounded-lg mt-7' type="submit">Submit</button>
         </form>
-        // </div>
-
     )
 }
 

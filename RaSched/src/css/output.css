@@ -575,6 +575,10 @@ video {
   margin-top: 1.75rem;
 }
 
+.mt-20 {
+  margin-top: 5rem;
+}
+
 .flex {
   display: flex;
 }
@@ -591,16 +595,24 @@ video {
   width: 12rem;
 }
 
-.w-5\/6 {
-  width: 83.333333%;
-}
-
 .flex-shrink-0 {
   flex-shrink: 0;
 }
 
 .flex-row {
   flex-direction: row;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.content-center {
+  align-content: center;
+}
+
+.items-center {
+  align-items: center;
 }
 
 .justify-center {
