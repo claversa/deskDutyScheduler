@@ -1,8 +1,13 @@
 import { Dropbox } from 'dropbox';
 import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
+import { useForm } from 'react-hook-form';
 
-const ACCESS_TOKEN = process.env.REACT_APP_DROPBOX_ACCESS_TOKEN;
+
+const ACCESS_TOKEN = import.meta.env.VITE_DROPBOX_ACCESS_TOKEN;
+const dropbox = new Dropbox({ accessToken: ACCESS_TOKEN })
+
+
 
 interface Unavailability {
     [day: string]: number[]; // object where key is day and value is an array of numbers
@@ -18,6 +23,7 @@ interface Interval {
 
 // hours will be 9-20
 const Form = () => {
+    const { handleSubmit, reset } = useForm();
 
     const [unavailability, setUnavailability] = useState<Unavailability>({
         Monday: [],
@@ -100,7 +106,6 @@ const Form = () => {
         return csvStr;
     }
 
-    const dropbox = new Dropbox({ accessToken: ACCESS_TOKEN })
     const uploadCSV = async (csvStr: string) => {
         try {
             const response = await dropbox.filesUpload({
@@ -115,13 +120,12 @@ const Form = () => {
         }
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onSubmit = async () => {
         const csvStr = convertToCSV();
-        // Handle form submission here, e.g., send `unavailability` to your backend
         await uploadCSV(csvStr);
         console.log(csvStr);
         console.log("Submission complete");
+        reset();
     };
 
 
@@ -130,7 +134,7 @@ const Form = () => {
 
 
     return (
-        <form className='flex flex-col items-center mt-20' onSubmit={handleSubmit}>
+        <form className='flex flex-col items-center mt-20' onSubmit={handleSubmit(onSubmit)}>
             <input className='hover:shadow-md shadow-lg py-2 px-3 mb-10 rounded-lg' type="text" value={userName} onChange={handleNameChange} placeholder='Name' required />
             <h3 className='font-lg text-red-800 font-bold mb-4'>Please indicate your UNavailability in intervals</h3>
             <div className='flex justify-center text-center flex-row gap-4'>
