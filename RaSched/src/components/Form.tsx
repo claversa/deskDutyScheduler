@@ -2,7 +2,7 @@ import { Dropbox } from 'dropbox';
 import React, { useEffect, useState } from 'react';
 import Papa from 'papaparse';
 
-const ACCESS_TOKEN = 'ACCESS TOKEN HERE'
+const ACCESS_TOKEN = process.env.REACT_APP_DROPBOX_ACCESS_TOKEN;
 
 interface Unavailability {
     [day: string]: number[]; // object where key is day and value is an array of numbers
