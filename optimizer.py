@@ -90,13 +90,31 @@ for d in all_days:
         model.Add(sum(shifts[(r, d, s)] for r in all_ras) >= 2)
 
 
+# Define consecutive shifts variables and objective
+consecutive_shifts = {}
+for r in all_ras:
+    for d in all_days:
+        for s in range(num_shifts - 1):
+            consecutive_shifts[(r, d, s)] = model.NewBoolVar(
+                f'consec_{r}_{d}_{s}')
+            model.AddBoolOr([shifts[(r, d, s)].Not(), shifts[(
+                r, d, s+1)].Not()]).OnlyEnforceIf(consecutive_shifts[(r, d, s)])
+            model.AddBoolAnd([shifts[(r, d, s)], shifts[(r, d, s+1)]]
+                             ).OnlyEnforceIf(consecutive_shifts[(r, d, s)])
+
+# Maximize the number of consecutive shifts
+model.Maximize(sum(consecutive_shifts[(
+    r, d, s)] for r in all_ras for d in all_days for s in range(num_shifts - 1)))
+
+
 solver = cp_model.CpSolver()
 status = solver.Solve(model)
 
 csv_data = [[''] * num_days for _ in all_shifts]
 day_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-# for d in all_days:
-#     csv_data.append([day_headers[d]] + [''] * num_shifts)
+
+for d in all_days:
+    csv_data.append([day_headers[d]] + [''] * num_shifts)
 
 if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     for day in all_days:
@@ -116,28 +134,11 @@ else:
 # max number assigned to a shift
 max_ras_per_shift = max(len(csv_data[shift][day].split(
     ", ")) for shift in all_shifts for day in all_days)
-# print(csv_data)
 
 with open("desk_schedule.csv", 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-
-    # Write the header row with multiple columns for each day
-    # header = ['Shift'] + [
-    #     f"{day} RA {i+1}"
-    #     for day in day_headers
-    #     for i in range(max_ras_per_shift)
-    # ]
-    # writer.writerow(header)
     writer.writerow(["Shift"] + [f"{day}" for day in day_headers])
-
     # Write the schedule data
     for shift in range(num_shifts):
-        # row = [f'Time: {(shift+9) % 12 if (shift+9) % 12 != 0 else 12} ']
-        # for day in all_days:
-        # ra_names = csv_data[shift][day].split(", ")
-        # Add each RA's name, and fill empty slots with empty strings if needed
-        # row.extend(ra_names + [''] * (max_ras_per_shift - len(ra_names)))
-        # row.extend()
-        # writer.writerow(row)
         writer.writerow(
             [f'Time: {(shift+9) % 12 if (shift+9) % 12 != 0 else 12} '] + csv_data[shift])
