@@ -67,8 +67,9 @@ for r in all_ras:
 for d in all_days:
     for s in all_shifts:
         # CONSTRAINT 1:
-        # for each shift, the sum of the ras assigned to that shift is 1
-        model.add_exactly_one(shifts[(r, d, s)] for r in all_ras)
+        # for each shift, the sum of the ras assigned to that shift is 4 (2 per desk)
+        # model.add_exactly_one(shifts[(r, d, s)] for r in all_ras)
+        model.Add(sum(shifts[(r, d, s)] for r in all_ras) == 4)
 
 for ra in all_ras:
     for shift in all_shifts:
