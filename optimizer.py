@@ -7,7 +7,7 @@ from collections import defaultdict
 # directory to loop thru
 directory = r"C:\Users\clave\OneDrive\Desktop\Scheduler_app_resources\ra_schedules"
 
-num_ras = 3
+num_ras = 72
 num_days = 5  # m-f
 num_shifts = 11  # 9-8  == 11 shifts
 
@@ -15,11 +15,8 @@ all_ras = list(range(num_ras))
 all_days = list(range(num_days))
 all_shifts = list(range(num_shifts))
 
-# all_shifts_uncorrected = []
-# for i in range(9, 21):
-#     all_shifts_uncorrected.append(i)
 
-# # 1 means unavailable maybe alphabetize so first in list is amber for ex:
+# # 1 means unavailable:
 # # [ [11 bits for M], [11 bits for T], [11 bits for W], [11 bits for R], [11 bits for F] ], <-- this is Amber
 # # [ [11 bits for M], [11 bits for T], [11 bits for W], [11 bits for R], [11 bits for F] ], <-- this is Caroline
 # # [ [11 bits for M], [11 bits for T], [11 bits for W], [11 bits for R], [11 bits for F] ], <-- this is Dean
@@ -62,38 +59,35 @@ for r in all_ras:
             shifts[(r, d, s)] = model.new_bool_var(f"shift_ra{r}_d{d}_s{s}")
             # shifts[(r, d, s)] equals 1 if shift s is assigned to ra r on day d, and 0 otherwise
 
-# constraints
-# 1 ra per shift
+# Constraints
+
+# CONSTRAINT 1: for each shift, the sum of the ras assigned to that shift should be between 2 and 4
 for d in all_days:
     for s in all_shifts:
-        # CONSTRAINT 1:
-        # for each shift, the sum of the ras assigned to that shift is 4 (2 per desk)
-        # model.add_exactly_one(shifts[(r, d, s)] for r in all_ras)
-        model.Add(sum(shifts[(r, d, s)] for r in all_ras) == 4)
+        model.Add(sum(shifts[(r, d, s)] for r in all_ras) >= 2)
+        model.Add(sum(shifts[(r, d, s)] for r in all_ras) <= 4)
 
+
+# CONSTRAINT 2: if ra is unavailable that day, do not schedule them
 for ra in all_ras:
     for shift in all_shifts:
         for day in all_days:
             if unavailability_matrix[ra][day][shift]:
-                # CONSTRAINT 2: if ra is unavailable that day, do not schedule them
                 model.Add(shifts[ra, day, shift] == 0)
 
-min_shifts_per_ra = (num_days * num_shifts) // num_ras
-if num_days * num_shifts % num_ras == 0:
-    max_shifts_per_ra = min_shifts_per_ra  # all have equal # shifts
-else:
-    # can have at most 1 extra for some ras
-    max_shifts_per_ra = min_shifts_per_ra+1
 
-# print(max_shifts_per_ra)
-# print(min_shifts_per_ra)
+# CONSTRAINT 3: Each RA's total shifts across the week should be between 2 and 3
+for ra in all_ras:
+    shifts_assigned = sum(shifts[(ra, d, s)]
+                          for d in all_days for s in all_shifts)
+    # model.Add(shifts_assigned)
+    model.Add(shifts_assigned == 3)
 
-# Constraints: Each RA's total shifts must be between min_shifts_per_ra and max_shifts_per_ra
-for ra in range(num_ras):
-    shifts_worked = sum(shifts[(ra, day, shift)] for day in range(
-        num_days) for shift in range(num_shifts))
-    model.Add(shifts_worked >= min_shifts_per_ra)  # Minimum shifts
-    model.Add(shifts_worked <= max_shifts_per_ra)  # Maximum shifts
+# CONSTRAINT 4: At least 2 RAs per shift
+for d in all_days:
+    for s in all_shifts:
+        # Ensure at least 2 RAs are assigned to each shift
+        model.Add(sum(shifts[(r, d, s)] for r in all_ras) >= 2)
 
 
 solver = cp_model.CpSolver()
@@ -101,8 +95,8 @@ status = solver.Solve(model)
 
 csv_data = [[''] * num_days for _ in all_shifts]
 day_headers = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-for d in all_days:
-    csv_data.append([day_headers[d]] + [''] * num_shifts)
+# for d in all_days:
+#     csv_data.append([day_headers[d]] + [''] * num_shifts)
 
 if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
     for day in all_days:
@@ -111,14 +105,39 @@ if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             for ra in all_ras:
                 if solver.Value(shifts[(ra, day, shift)]):
                     ra_assigned = f"RA {ra_list[ra]}"  # gets actual name
-                    break
-            csv_data[shift][day] = ra_assigned
+                    if csv_data[shift][day]:  # If there's already data there
+                        csv_data[shift][day] += f", {ra_assigned}"
+                    else:  # If it's empty
+                        csv_data[shift][day] = ra_assigned
+            # csv_data[shift][day] = (ra_assigned)
 else:
     print("no solution")
 
+# max number assigned to a shift
+max_ras_per_shift = max(len(csv_data[shift][day].split(
+    ", ")) for shift in all_shifts for day in all_days)
+# print(csv_data)
+
 with open("desk_schedule.csv", 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(['Shift'] + day_headers)
+
+    # Write the header row with multiple columns for each day
+    # header = ['Shift'] + [
+    #     f"{day} RA {i+1}"
+    #     for day in day_headers
+    #     for i in range(max_ras_per_shift)
+    # ]
+    # writer.writerow(header)
+    writer.writerow(["Shift"] + [f"{day}" for day in day_headers])
+
+    # Write the schedule data
     for shift in range(num_shifts):
+        # row = [f'Time: {(shift+9) % 12 if (shift+9) % 12 != 0 else 12} ']
+        # for day in all_days:
+        # ra_names = csv_data[shift][day].split(", ")
+        # Add each RA's name, and fill empty slots with empty strings if needed
+        # row.extend(ra_names + [''] * (max_ras_per_shift - len(ra_names)))
+        # row.extend()
+        # writer.writerow(row)
         writer.writerow(
             [f'Time: {(shift+9) % 12 if (shift+9) % 12 != 0 else 12} '] + csv_data[shift])
