@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb');
+const { Readable } = require('stream');
 const csvParser = require('csv-parser');
 
 const uri = process.env.MONGODB_URI;
@@ -8,8 +9,12 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
         const { csvData, userName } = req.body;
 
+        // Convert csvData string to a readable stream
+        const stream = Readable.from(csvData);
+
         let csvArray = [];
-        csvParser(csvData, { delimiter: ',' })
+        stream
+            .pipe(csvParser({ delimiter: ',' }))
             .on('data', (data) => csvArray.push(data))
             .on('end', async () => {
                 try {
