@@ -22,7 +22,7 @@ interface Interval {
 
 
 // hours will be 9-20
-const Form = () => {
+const Download = () => {
     const { handleSubmit, reset } = useForm();
 
     const [unavailability, setUnavailability] = useState<Unavailability>({
