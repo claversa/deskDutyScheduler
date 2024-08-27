@@ -4,11 +4,6 @@ import Papa from 'papaparse';
 import { useForm } from 'react-hook-form';
 
 
-// const ACCESS_TOKEN = import.meta.env.VITE_DROPBOX_ACCESS_TOKEN;
-// const dropbox = new Dropbox({ accessToken: ACCESS_TOKEN })
-
-
-
 interface Unavailability {
     [day: string]: number[]; // object where key is day and value is an array of numbers
 }
