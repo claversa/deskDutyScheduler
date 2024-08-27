@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "dropbox": "^10.34.0",
+    "gapi-script": "^1.2.0",
+    "mongodb": "^6.8.0",
     "papaparse": "^5.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
