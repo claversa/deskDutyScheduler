@@ -7,7 +7,7 @@ from collections import defaultdict
 # directory to loop thru
 directory = r"C:\Users\clave\OneDrive\Desktop\Scheduler_app_resources\ra_schedules"
 
-num_ras = 72
+num_ras = 68
 num_days = 5  # m-f
 num_shifts = 11  # 9-8  == 11 shifts
 
